@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { parseFragmentFileName, fragmentFileName, FRAGMENT_TYPES } from './fragment';
+import { recordHit } from './reviewPrompt';
 
 let diagnostics: vscode.DiagnosticCollection;
 
@@ -13,7 +14,7 @@ function parentDirName(uri: vscode.Uri): string {
   return path.slice(path.lastIndexOf('/') + 1);
 }
 
-function refreshDiagnostics(document: vscode.TextDocument): void {
+function refreshDiagnostics(context: vscode.ExtensionContext, document: vscode.TextDocument): void {
   // Scope, deliberate (same as the original): only files whose direct
   // parent directory is literally named "changelog.d" are checked.
   if (parentDirName(document.uri) !== 'changelog.d') {
@@ -35,6 +36,7 @@ function refreshDiagnostics(document: vscode.TextDocument): void {
   );
   diagnostic.source = 'Changelog Fragment Companion';
   diagnostics.set(document.uri, [diagnostic]);
+  recordHit(context, `${document.uri.toString()}:0`);
 }
 
 async function createFragment(): Promise<void> {
@@ -89,11 +91,11 @@ export function activate(context: vscode.ExtensionContext): void {
   diagnostics = vscode.languages.createDiagnosticCollection('changelogFragmentCompanion');
   context.subscriptions.push(diagnostics);
 
-  vscode.workspace.textDocuments.forEach(refreshDiagnostics);
+  vscode.workspace.textDocuments.forEach((document) => refreshDiagnostics(context, document));
 
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(refreshDiagnostics),
-    vscode.workspace.onDidChangeTextDocument((event) => refreshDiagnostics(event.document)),
+    vscode.workspace.onDidOpenTextDocument((document) => refreshDiagnostics(context, document)),
+    vscode.workspace.onDidChangeTextDocument((event) => refreshDiagnostics(context, event.document)),
     vscode.workspace.onDidCloseTextDocument((document) => diagnostics.delete(document.uri)),
     vscode.commands.registerCommand('changelogFragmentCompanion.newFragment', () => void createFragment()),
   );
