@@ -2,7 +2,7 @@
   "name": "changelog-fragment-companion",
   "displayName": "Changelog Fragment Companion",
   "description": "Manage per-PR changelog fragments (changelog.d/<issue>.<type>.md, the towncrier convention) -- create and validate, no data leaves your editor.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "GapHunterLabs",
   "icon": "images/icon.png",
   "license": "Apache-2.0",
